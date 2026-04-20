@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Modern E-Commerce UI</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  background:linear-gradient(135deg,#1f1c2c,#928dab);
+  color:white;
+}
+
+/* NAVBAR */
+nav{
+  position:fixed;
+  top:0;
+  width:100%;
+  height:65px;
+  backdrop-filter:blur(15px);
+  background:rgba(0,0,0,0.3);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 5%;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.logo{
+  font-weight:600;
+  font-size:18px;
+}
+
+nav button{
+  padding:8px 15px;
+  border:none;
+  border-radius:8px;
+  background:rgba(255,255,255,0.1);
+  color:white;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container{
+  padding:90px 5% 40px;
+}
+
+/* CARD */
+.card{
+  backdrop-filter:blur(20px);
+  background:rgba(255,255,255,0.08);
+  border-radius:15px;
+  padding:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:20px;
+}
+
+/* PRODUCT */
+.product{
+  text-align:center;
+  transition:0.3s;
+}
+
+.product:hover{
+  transform:translateY(-5px);
+}
+
+.price{
+  margin:10px 0;
+  font-weight:600;
+}
+
+.btn{
+  background:#00c6ff;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
+}
+
+/* AUTH */
+.auth{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border:none;
+  border-radius:8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+
+const {useState,useReducer,createContext,useContext} = React;
+
+const AppCtx = createContext();
+
+const PRODUCTS = [
+  {id:1,name:"Headphones",price:2000,emoji:"🎧"},
+  {id:2,name:"Keyboard",price:3500,emoji:"⌨️"},
+  {id:3,name:"Watch",price:5000,emoji:"⌚"},
+  {id:4,name:"Shoes",price:1800,emoji:"👟"}
+];
+
+function reducer(state,action){
+  switch(action.type){
+    case "ADD":
+      return [...state,action.item];
+    case "CLEAR":
+      return [];
+    default:
+      return state;
+  }
+}
+
+/* AUTH */
+function Auth(){
+  const {setUser} = useContext(AppCtx);
+  return(
+    <div className="auth">
+      <div className="card" style={{width:"300px"}}>
+        <h2>Login</h2>
+        <input placeholder="Email"/>
+        <input placeholder="Password" type="password"/>
+        <button className="btn" onClick={()=>setUser(true)}>Login</button>
+      </div>
+    </div>
+  );
+}
+
+/* NAV */
+function Nav(){
+  const {setPage,cart} = useContext(AppCtx);
+  return(
+    <nav>
+      <div className="logo">🛒 Shop</div>
+      <div>
+        <button onClick={()=>setPage("store")}>Shop</button>
+        <button onClick={()=>setPage("cart")}>Cart ({cart.length})</button>
+      </div>
+    </nav>
+  );
+}
+
+/* STORE */
+function Store(){
+  const {dispatch} = useContext(AppCtx);
+  return(
+    <div className="container">
+      <div className="grid">
+        {PRODUCTS.map(p=>(
+          <div className="card product" key={p.id}>
+            <div style={{fontSize:"40px"}}>{p.emoji}</div>
+            <h3>{p.name}</h3>
+            <div className="price">₹{p.price}</div>
+            <button className="btn" onClick={()=>dispatch({type:"ADD",item:p})}>
+              Add to Cart
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* CART */
+function Cart(){
+  const {cart,dispatch} = useContext(AppCtx);
+  return(
+    <div className="container">
+      <div className="card">
+        <h2>Cart</h2>
+        {cart.map((i,index)=>(
+          <p key={index}>{i.name} - ₹{i.price}</p>
+        ))}
+        <button className="btn" onClick={()=>dispatch({type:"CLEAR"})}>
+          Clear Cart
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* APP */
+function App(){
+  const [user,setUser]=useState(false);
+  const [page,setPage]=useState("store");
+  const [cart,dispatch]=useReducer(reducer,[]);
+
+  if(!user) return(
+    <AppCtx.Provider value={{setUser}}>
+      <Auth/>
+    </AppCtx.Provider>
+  );
+
+  return(
+    <AppCtx.Provider value={{cart,dispatch,setPage}}>
+      <Nav/>
+      {page==="store" && <Store/>}
+      {page==="cart" && <Cart/>}
+    </AppCtx.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+
+</script>
+
+</body>
+</html>
+
